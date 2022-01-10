@@ -24,21 +24,11 @@ class Room2Room(Connection):
         self.to_room = to_room
 
 class Adjacency(Room2Room):
-    pass
 
-    def define_constraint(self,model):
-        i = self.from_room.idx
-        j = self.to_room.idx
-        touch_len = 100
-        if i != j:
-            return [[model.y[i] + model.h[i] <= model.y[j]],
-                    [model.y[i] >= model.y[j] + model.h[j]],
-                    [model.x[i] + model.w[i] <= model.x[j]],
-                    [model.x[i] + model.w[i] <= model.x[j]],
-                    [model.floor[i] >= model.floor[j] + 1],
-                    [model.floor[j] >= model.floor[i] + 1]
-                    ]
-            model.adjacency_constraints.add((floor_idx, model.floor[room_idx], floor_idx))
+    def __init__(self, from_room, to_room,touch_len=100):
+        super().__init__(from_room=from_room, to_room=to_room)
+        self.touch_len= touch_len
+
 
 
 
