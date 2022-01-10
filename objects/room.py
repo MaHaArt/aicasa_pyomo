@@ -14,7 +14,7 @@ class Room:
     max_area = 10 * 1e4
     _color = (212,255,127)
     _living_space = 0
-    _min_len = 1 * 1e2
+    _min_len = 0.5 * 1e2
 
     def __init__(self, name=None):
         if name is None:
@@ -73,7 +73,7 @@ class Kitchen(Room):
     max_area = 30 * 1e4  # 15m2
     color = (87, 207, 87)
     _living_space = 1
-    _min_len = 3.5 * 1e2
+    _min_len = 1.5 * 1e2
 
     def __init__(self):
         super().__init__()
@@ -84,7 +84,7 @@ class LivingRoom(Room):
     max_area = 100 * 1e4  # 30m2
     color = (51, 51, 205)
     _living_space = 1
-    _min_len = 3.5 * 1e2
+    _min_len = 1.5 * 1e2
 
     def __init__(self):
         super().__init__()
@@ -96,7 +96,7 @@ class WC(Room):
     max_area = 5 * 1e4  # 5m2
     upper_bound_len = 2 * 1e2
     color = (204, 255, 204)
-    _min_len = 1.5 * 1e2
+    _min_len = .5 * 1e2
 
     def __init__(self):
         super().__init__()
@@ -107,7 +107,7 @@ class Bathroom(Room):
     min_area = 2 * 1e4  # 8m2
     max_area = 20 * 1e4  # 10m2
     color = (255, 204, 204)
-    _min_len = 1.5 * 1e2
+    _min_len = .5 * 1e2
 
     def __init__(self):
         super().__init__()
@@ -118,7 +118,7 @@ class DiningRoom(Room):
     max_area = 25 * 1e4  # 18m2
     color = (255, 153, 204)
     _living_space = 1
-    _min_len = 3.5 * 1e2
+    _min_len = 2.5 * 1e2
 
     def __init__(self):
         super().__init__()

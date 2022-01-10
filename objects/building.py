@@ -69,13 +69,13 @@ class Building:
         # opt.options['ma27_pivtol'] = 1e-4
         solver = pe.SolverFactory('bonmim', executable='/home/markus/Bonmin-1.8.8/build/bin/bonmin')
 
-        solver.options['linear_solver'] = 'ma86'  # option für ipopt ma8,ma97
+        # solver.options['linear_solver'] = 'ma86'  # option für ipopt ma8,ma97
         # solver.options['max_iter'] = 10000  # option für ipopt?
-        solver.options['bonmin.milp_strategy'] = 'find_good_sol'  # default: solve_to_optimality
-        solver.options['bonmin.algorithm'] = 'B-BB'  # default and recommended: B-BB. B-Hyb
-        solver.options['bonmin.solution_limit'] = 1
+        # solver.options['bonmin.milp_strategy'] = 'find_good_sol'  # default: solve_to_optimality
+        # solver.options['bonmin.algorithm'] = 'B-BB'  # default and recommended: B-BB. B-Hyb
+        # solver.options['bonmin.solution_limit'] = 1
         solver.options['bonmin.time_limit'] = 120  # in sec
-        solver.options['bonmin.nlp_solver'] = 'Ipopt'  # default
+        # solver.options['bonmin.nlp_solver'] = 'Ipopt'  # default
         # solver.options['bonmin.iteration_limit'] = 2147483647
         self.opt_results = solver.solve(self.model,tee=tee)
         return self.opt_results
