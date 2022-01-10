@@ -26,7 +26,7 @@ def do_test():
     building.add_connection(Adjacency(from_room=corridor2, to_room=living2))
     # building.add_connection(Adjacency(from_room=corridor,to_room=living))
 
-    # res = building.optimise_mindtpy()
+    # results = building.optimise_mindtpy(tee=False)
     results = building.optimise_bonmin(tee=False)
     # results = building.optimise_couenne()
 

@@ -52,14 +52,14 @@ class Building:
         define_vars_for_model(self)
         define_Constraints_no_intersection(self)
         define_Constrains_in_boundary(self)
-        # define_Constraints_min_area(self)
-        # define_Constraints_max_area(self)
-        # define_Constraints_min_len(self)
+        define_Constraints_min_area(self)
+        define_Constraints_max_area(self)
+        define_Constraints_min_len(self)
         # define_Constraints_ratio(self)
         define_floor_constraints(self)
         define_Constraints_adjacency(self)
         define_Objective(self)
-        # pe.TransformationFactory('gdp.bigm').apply_to(self.model)  #'gdp.bigm' , 'gdp.hull'
+        # pe.TransformationFactory('gdp.hull').apply_to(self.model)  #'gdp.bigm' , '
         pe.TransformationFactory('gdp.bigm').apply_to(self.model)
 
 
@@ -70,13 +70,13 @@ class Building:
         solver = pe.SolverFactory('bonmim', executable='/home/markus/Bonmin-1.8.8/build/bin/bonmin')
 
         solver.options['linear_solver'] = 'ma86'  # option für ipopt ma8,ma97
-        solver.options['max_iter'] = 10000  # option für ipopt?
+        # solver.options['max_iter'] = 10000  # option für ipopt?
         solver.options['bonmin.milp_strategy'] = 'find_good_sol'  # default: solve_to_optimality
         solver.options['bonmin.algorithm'] = 'B-BB'  # default and recommended: B-BB. B-Hyb
-        solver.options['bonmin.solution_limit'] = 3
+        solver.options['bonmin.solution_limit'] = 1
         solver.options['bonmin.time_limit'] = 120  # in sec
         solver.options['bonmin.nlp_solver'] = 'Ipopt'  # default
-        solver.options['bonmin.iteration_limit'] = 2147483647
+        # solver.options['bonmin.iteration_limit'] = 2147483647
         self.opt_results = solver.solve(self.model,tee=tee)
         return self.opt_results
 
@@ -112,7 +112,7 @@ class Building:
         self.opt_results = solver.solve(self.model,
                                        strategy='OA',
                                        # time_limit=3600,
-                                       mip_solver='gplk',
+                                       mip_solver='glpk',
                                        nlp_solver='ipopt',
                                        tee=tee)
         return self.opt_results

@@ -12,7 +12,7 @@ class Room:
     _aspect_ratio = 1.6180339887
     min_area = 1 * 1e4
     max_area = 10 * 1e4
-    color = (212,255,127)
+    _color = (212,255,127)
     _living_space = 0
     _min_len = 1 * 1e2
 
@@ -27,7 +27,7 @@ class Room:
 
     @property
     def color(self):
-        col = type(self).color
+        col = type(self)._color
         return col
 
     @property
@@ -38,7 +38,7 @@ class Room:
     @property
     def living_space(self):
         myclass = type(self)
-        return myclass._living_space
+        return float(myclass._living_space)
 
     @property
     def min_len(self):

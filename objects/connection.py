@@ -25,7 +25,7 @@ class Room2Room(Connection):
 
 class Adjacency(Room2Room):
 
-    def __init__(self, from_room, to_room,touch_len=100):
+    def __init__(self, from_room, to_room,touch_len=10):
         super().__init__(from_room=from_room, to_room=to_room)
         self.touch_len= touch_len
 

@@ -170,7 +170,8 @@ def disjunction_ratio_rule(model, i):
     if model.R[i] == 0.:
         return gdp.Disjunction.Skip
     else:
-        return [[model.R[i] * 0.98 <= model.w[i] / model.h[i] <= model.R[i] * 1.02],
+        return [
+            [model.R[i] * 0.98 <= model.w[i] / model.h[i] <= model.R[i] * 1.02],
             [model.R[i] * 0.98 <= model.h[i] / model.w[i] <= model.R[i] * 1.02]
             ]
 
