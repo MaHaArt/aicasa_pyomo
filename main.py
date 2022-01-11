@@ -5,7 +5,7 @@ from pyomo.opt import SolverStatus, TerminationCondition
 
 
 def do_test():
-    building = Building(building_length_m=8, building_width_m=10, max_floor=2)
+    building = Building(building_length_m=10, building_width_m=20, max_floor=2)
 
     hall = building.add_room(Hall(), floor=0)
     corridor1 = building.add_room(Corridor())
@@ -29,7 +29,7 @@ def do_test():
     # results = building.optimise_mindtpy(tee=True)
     results = building.optimise_bonmin(tee=False)
     # results = building.optimise_couenne()
-
+    building.draw_sketch()
     if (
             results.solver.status == SolverStatus.ok):  # and ( results.solver.termination_condition == TerminationCondition.optimal):
         # Do something when the solution in optimal and feasible
