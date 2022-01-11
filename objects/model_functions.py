@@ -166,7 +166,7 @@ def define_Constraints_no_intersection(building):
                                             rule=disjunction_no_intersection_rule, xor=False)
 
 
-DA müssen wir das tun
+# DA müssen wir das tun
 def disjunction_ratio_rule(model, i):
     return [[model.R * 0.98 <= model.w[i] / model.h[i] <= model.R * 1.02],
             [model.R * 0.98 <= model.h[i] / model.w[i] <= model.R * 1.02]]
@@ -226,5 +226,6 @@ def define_Constrains_in_boundary(building):
 def define_Objective(building):
     model = building.model
     model.value = pe.Objective(
-        expr=sum(model.h[i] * model.w[i] for i in model.room_idx),
+        # expr=sum(model.w[i] for i in model.room_idx),
+        expr=sum(model.h[i]  for i in model.room_idx),
         sense=pe.maximize)
