@@ -1,15 +1,10 @@
-import numpy as np
 import cv2
-from objects.room import Room
-from random import seed
-from random import random
-from objects.helper import *
-from objects.model_functions import *
+import numpy as np
 import pyomo.environ as pe
-import logging
-from pyomo.util.infeasible import log_infeasible_constraints
+
 from objects.building_constraints import *
 from objects.connection import Adjacency
+from objects.model_functions import *
 
 
 class Building:
@@ -55,7 +50,7 @@ class Building:
         define_Constraints_min_area(self)
         define_Constraints_max_area(self)
         define_Constraints_min_len(self)
-        # define_Constraints_ratio(self)
+        define_Constraints_ratio(self)
         define_floor_constraints(self)
         define_Constraints_adjacency(self)
         define_Objective(self)
@@ -110,10 +105,11 @@ class Building:
         self.define_model()
         solver = pe.SolverFactory('mindtpy')
         self.opt_results = solver.solve(self.model,
-                                       strategy='OA',
-                                       # time_limit=3600,
+                                       strategy='OA', # oder ECP oder GOA
                                        mip_solver='glpk',
                                        nlp_solver='ipopt',
+                                        # mip_solver_args={'timelimit': 100},
+                                        # nlp_solver_args={'timelimit': 100},
                                        tee=tee)
         return self.opt_results
 

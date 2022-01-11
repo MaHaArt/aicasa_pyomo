@@ -20,13 +20,13 @@ def do_test():
     # bath = building.add_room(Bathroom())
     # wc = building.add_room(WC())
     building.add_connection(Adjacency(from_room=corridor1, to_room=hall))
-    building.add_connection(Adjacency(from_room=corridor1, to_room=dining))
-    building.add_connection(Adjacency(from_room=dining, to_room=kitchen))
-    building.add_connection(Adjacency(from_room=corridor1, to_room=living))
-    building.add_connection(Adjacency(from_room=corridor2, to_room=living2))
+    # building.add_connection(Adjacency(from_room=corridor1, to_room=dining))
+    # building.add_connection(Adjacency(from_room=dining, to_room=kitchen))
+    # building.add_connection(Adjacency(from_room=corridor1, to_room=living))
+    # building.add_connection(Adjacency(from_room=corridor2, to_room=living2))
     # building.add_connection(Adjacency(from_room=corridor,to_room=living))
 
-    # results = building.optimise_mindtpy(tee=False)
+    # results = building.optimise_mindtpy(tee=True)
     results = building.optimise_bonmin(tee=False)
     # results = building.optimise_couenne()
 
