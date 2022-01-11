@@ -227,5 +227,5 @@ def define_Objective(building):
     model = building.model
     model.value = pe.Objective(
         # expr=sum(model.w[i] for i in model.room_idx),
-        expr=sum(model.h[i]  for i in model.room_idx),
+        expr=sum(model.h[i] * model.w[i] for i in model.room_idx),
         sense=pe.maximize)

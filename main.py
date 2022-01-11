@@ -5,20 +5,19 @@ from pyomo.opt import SolverStatus, TerminationCondition
 
 
 def do_test():
-    building = Building(building_length_m=10, building_width_m=20, max_floor=2)
+    building = Building(building_length_m=20, building_width_m=20, max_floor=2)
 
     hall = building.add_room(Hall(), floor=0)
     corridor1 = building.add_room(Corridor())
     corridor2 = building.add_room(Corridor(), floor=1)
 
-    # building.add_connection(Adjacency(from_room=hall,to_room=corridor))
     #
     kitchen = building.add_room(Kitchen())
     living = building.add_room(LivingRoom())
     living2 = building.add_room(LivingRoom())
     dining = building.add_room(DiningRoom())
-    # bath = building.add_room(Bathroom())
-    # wc = building.add_room(WC())
+    bath = building.add_room(Bathroom())
+    wc = building.add_room(WC())
     building.add_connection(Adjacency(from_room=corridor1, to_room=hall))
     building.add_connection(Adjacency(from_room=corridor1, to_room=dining))
     building.add_connection(Adjacency(from_room=dining, to_room=kitchen))
@@ -29,12 +28,11 @@ def do_test():
     # results = building.optimise_mindtpy(tee=True)
     results = building.optimise_bonmin(tee=False)
     # results = building.optimise_couenne()
-    building.draw_sketch()
-    if (
-            results.solver.status == SolverStatus.ok):  # and ( results.solver.termination_condition == TerminationCondition.optimal):
+    if (results.solver.status == SolverStatus.ok):  # and ( results.solver.termination_condition == TerminationCondition.optimal):
         # Do something when the solution in optimal and feasible
         building.draw_sketch()
-
+    elif (results.solver.status == SolverStatus.warning):
+        building.draw_sketch()
     elif (results.solver.termination_condition == TerminationCondition.infeasible):
         # Do something when model in infeasible
         print('Infeasible')

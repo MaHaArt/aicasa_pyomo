@@ -68,7 +68,7 @@ class Building:
         solver.options['max_iter'] = 10000  # option für ipopt?
         solver.options['bonmin.milp_strategy'] = 'find_good_sol'  # default: solve_to_optimality
         solver.options['bonmin.algorithm'] = 'B-BB'  # default and recommended: B-BB. B-Hyb
-        solver.options['bonmin.solution_limit'] = '2'
+        solver.options['bonmin.solution_limit'] = '1'
         solver.options['bonmin.time_limit'] = 100  # in sec
         # solver.options['bonmin.nlp_solver'] = 'Ipopt'  # default
         # solver.options['bonmin.iteration_limit'] = 2147483647
