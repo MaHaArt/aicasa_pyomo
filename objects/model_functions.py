@@ -12,7 +12,8 @@ def define_vars_for_model(building):
     model.R = 1.6180339887
     model.min_area = [r.min_area for r in building.rooms]
     model.max_area = [r.max_area for r in building.rooms]
-    model.min_len = [r.min_len for r in building.rooms]
+    model.min_side_len = pe.Var(model.room_idx, bounds=(50, max(building.len, building.width)),
+                                within=pe.NonNegativeReals)
     model.living_space = [r.living_space for r in building.rooms]
     model.x = pe.Var(model.room_idx, bounds=(0, building.width), within=pe.NonNegativeReals)
     model.y = pe.Var(model.room_idx, bounds=(0, building.len), within=pe.NonNegativeReals)
@@ -34,7 +35,7 @@ def define_floor_constraints(building):
 
 def disjunction_adjacency_rule(model, i, j):
     adjacency = model.building.get_adjacency(i, j)
-    if not adjacency is None:
+    if adjacency is not None:
         touch_len = adjacency.touch_len
         model.floor_constraints.add(model.floor[j] - model.floor[i] <= 0)  # must be one same floor
         model.floor_constraints.add(model.floor[i] - model.floor[j] <= 0)
@@ -178,14 +179,14 @@ def define_Constraints_ratio(building):
 
 
 def min_len_rule_w(model, i):
-    return model.w[i] >= model.min_len[i]
+    return model.w[i] >= model.min_side_len[i]
 
 
 def min_len_rule_h(model, i):
-    return model.h[i] >= model.min_len[i]
+    return model.h[i] >= model.min_side_len[i]
 
 
-def define_Constraints_min_len(building):
+def define_Constraints_min_side_len(building):
     model = building.model
     model.min_len_constraint_w = pe.Constraint(model.room_idx, rule=min_len_rule_w)
     model.min_len_constraint_h = pe.Constraint(model.room_idx, rule=min_len_rule_h)
@@ -227,5 +228,5 @@ def define_Objective(building):
     model = building.model
     model.value = pe.Objective(
         # expr=sum(model.w[i] for i in model.room_idx),
-        expr=sum(model.h[i] * model.w[i] for i in model.room_idx),
+        expr=sum(model.min_side_len[i] for i in model.room_idx),
         sense=pe.maximize)

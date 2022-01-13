@@ -49,7 +49,7 @@ class Building:
         define_Constrains_in_boundary(self)
         define_Constraints_min_area(self)
         define_Constraints_max_area(self)
-        define_Constraints_min_len(self)
+        define_Constraints_min_side_len(self)
         # define_Constraints_ratio(self)
         define_floor_constraints(self)
         define_Constraints_adjacency(self)
@@ -116,7 +116,7 @@ class Building:
 
 
     def draw_sketch(self, pixel_per_cm=0.5, thickness=2, font=cv2.FONT_HERSHEY_SIMPLEX, border=50):
-        cv2.namedWindow('Floorplan', cv2.WINDOW_AUTOSIZE)  # cv.WINDOW_AUTOSIZE, cv.WINDOW_NORMAL
+        cv2.namedWindow('Floorplan', cv2.WINDOW_GUI_NORMAL)  # cv.WINDOW_AUTOSIZE, cv.WINDOW_NORMAL
         print('total m2 boundary: {}'.format(self.len * self.width * 1e-4))
         floor_imgs = []
         for floor in range(self.max_floor):
