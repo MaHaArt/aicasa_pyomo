@@ -5,10 +5,10 @@ import pyomo.environ as pe
 from objects.building_constraints import *
 from objects.connection import Adjacency
 from objects.model_functions import *
-
+import os
 
 class Building:
-    def __init__(self, building_width_m=10, building_length_m=25, max_floor=1):
+    def __init__(self, building_width_m=10, building_length_m=25, max_floor=1, floor_height_m=2.5):
         self.rooms = []
         self.connections = []
         self.len = building_length_m * 1e2
@@ -17,6 +17,10 @@ class Building:
         self.opt_results = None
         self.max_floor = max_floor
         self.floor_constraints = []
+        self.floor_height = floor_height_m * 1e2
+        # referenzpunkt für abstände
+        self.reference_x = 0.
+        self.reference_y = 0.
 
     def add_room(self, room, floor=None):
         idx = self.nr_of_rooms
@@ -41,6 +45,12 @@ class Building:
     def nr_of_rooms(self):
         return len(self.rooms)
 
+    def area_bounds(self):
+        min_area, max_area = 0, 0
+        for room in self.rooms:
+            min_area += room.min_area
+            max_area += room.max_area
+        return min_area, max_area, self.width * self.len
 
     def define_model(self):
         self.model = pe.ConcreteModel(name='floorplan')
@@ -57,7 +67,6 @@ class Building:
         # pe.TransformationFactory('gdp.hull').apply_to(self.model)  #'gdp.bigm' , '
         pe.TransformationFactory('gdp.bigm').apply_to(self.model)
 
-
     def optimise_bonmin(self, tee=False):
         self.define_model()
         # opt = pe.SolverFactory('gdpopt')  #' gplk
@@ -72,13 +81,13 @@ class Building:
         solver.options['bonmin.time_limit'] = 100  # in sec
         # solver.options['bonmin.nlp_solver'] = 'Ipopt'  # default
         # solver.options['bonmin.iteration_limit'] = 2147483647
-        self.opt_results = solver.solve(self.model,tee=tee)
+        self.opt_results = solver.solve(self.model, tee=tee)
         return self.opt_results
 
     def optimise_couenne(self):
         self.define_model()
 
-        with pe.SolverFactory('couenne',executable='/home/markus/Couenne/build/bin/couenne') as solver:
+        with pe.SolverFactory('couenne', executable='/home/markus/Couenne/build/bin/couenne') as solver:
             # solver.options['linear_solver'] = 'ma86'  # option für ipopt ma8,ma97
             solver.options.option_file_name = "couenne.opt"
             with open("couenne.opt", "w") as f:
@@ -91,29 +100,46 @@ class Building:
                 # f.write("bonmin.solution_limit  2\n")
                 f.write("ipopt.linear_solver ma86\n")
 
-            self.opt_results = solver.solve(self.model,tee=False)
+            self.opt_results = solver.solve(self.model, tee=False)
             return self.opt_results
 
-        # solver = pe.SolverFactory('couenne', executable='/home/markus/Couenne/build/bin/couenne')
-        # # solver.options['Couenne.display_stats'] = 'yes'
-        # solver.options['linear_solver'] = 'ma86'  # option für ipopt ma8,ma97
-        # solver.options['problem_print_level'] = 7 # max 7
-        # self.opt_result = solver.solve(self.model,tee=True)
+    def optimise_octeract(self, tee=False):
+        self.define_model()
+        os.environ["octeract_options"] = "num_cores=1"
+        with pe.SolverFactory('octeract-engine',solver_io="nl",executable='/home/markus/octeract-engine-4.0.0/bin/octeract-engine') as solver:
+            # solver.options['linear_solver'] = 'ma86'  # option für ipopt ma8,ma97
+            # solver.options.option_file_name = "octeract.opt"
+            with open("octeract.opt", "w") as f:
+                # f.write() # Here you can specify options for Couenne
+                # f.write("problem_print_level 7\n")
+                # f.write("MILP_SOLVER=HIGHS\n")  # oder OSICBC
+                f.write(
+                    "CP_MAX_ITERATIONS=5\n")  # limit for the number of iterations performed by Constraint Propagation (CP), default 5
+                f.write("FIRST_FEASIBLE_SOLUTION=false\n")
+                f.write("MAX_SOLVER_TIME=360\n")  # in secs
+                f.write("BRANCHING_STRATEGY = HYBRID_INTEGER_LEAST_REDUCED_AXIS\n")  # default:  BRANCHING_STRATEGY = MOST_VIOLATED_TERM
+                # f.write("USE_MILP_RELAXATION = false\n")
 
+            self.opt_results = solver.solve(self.model, tee=tee) # ,load_solutions=True,keepfiles=True)
+            return self.opt_results
 
-    def optimise_mindtpy(self,tee=False):
+    # solver = pe.SolverFactory('couenne', executable='/home/markus/Couenne/build/bin/couenne')
+    # # solver.options['Couenne.display_stats'] = 'yes'
+    # solver.options['linear_solver'] = 'ma86'  # option für ipopt ma8,ma97
+    # solver.options['problem_print_level'] = 7 # max 7
+    # self.opt_result = solver.solve(self.model,tee=True)
+
+    def optimise_mindtpy(self, tee=False):
         self.define_model()
         solver = pe.SolverFactory('mindtpy')
         self.opt_results = solver.solve(self.model,
-                                       strategy='OA', # oder ECP oder GOA
-                                       mip_solver='glpk',
-                                       nlp_solver='ipopt',
+                                        strategy='OA',  # oder ECP oder GOA
+                                        mip_solver='glpk',
+                                        nlp_solver='ipopt',
                                         # mip_solver_args={'timelimit': 100},
                                         # nlp_solver_args={'timelimit': 100},
-                                       tee=tee)
+                                        tee=tee)
         return self.opt_results
-
-
 
     def draw_sketch(self, pixel_per_cm=0.5, thickness=2, font=cv2.FONT_HERSHEY_SIMPLEX, border=50):
         cv2.namedWindow('Floorplan', cv2.WINDOW_GUI_NORMAL)  # cv.WINDOW_AUTOSIZE, cv.WINDOW_NORMAL

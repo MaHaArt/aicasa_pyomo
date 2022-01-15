@@ -21,8 +21,104 @@ def define_vars_for_model(building):
     model.h = pe.Var(model.room_idx, bounds=(50, building.len), within=pe.NonNegativeReals)
     model.w = pe.Var(model.room_idx, bounds=(50, building.width), within=pe.NonNegativeReals)
     model.floor_constraints = pe.ConstraintList()
+    model.dist_x = pe.Var(model.room_idx, model.room_idx,
+                          bounds=(0, 2 * building.width + building.max_floor * building.floor_height),
+                          within=pe.NonNegativeReals)
+    model.dist_y = pe.Var(model.room_idx, model.room_idx,
+                          bounds=(0, 2 * building.len + building.max_floor * building.floor_height),
+                          within=pe.NonNegativeReals)
     model.building = building
     return model
+
+
+def disjunction_distance_x_rule(model, i, j):
+    ref_x = model.building.reference_x
+    floor_height = model.building.floor_height
+
+    return [
+        # i links von j auf gleichem floor
+        [model.x[i] <= model.x[j],
+         model.floor[i] == model.floor[j],
+         model.dist_x == (model.x[j] + 0.5 * model.w[j]) - (model.x[i] + 0.5 * model.w[i])
+         ],
+        # i rechts von j auf gleichem floor
+        [model.x[i] >= model.x[j],
+         model.floor[i] == model.floor[j],
+         model.dist_x == (model.x[i] + 0.5 * model.w[i]) - (model.x[j] + 0.5 * model.w[j])
+         ],
+        #  i auf floor unterhalb, situation ref_x lage 1
+        [model.floor[i] <= model.floor[j] + 1,
+         model.x[i] + 0.5 * model.w[i] >= ref_x,
+         model.x[j] + 0.5 * model.w[j] >= ref_x,
+         model.dist_x == ((model.x[j] + 0.5 * model.w[j]) - ref_x) + (
+                     (model.x[i] + 0.5 * model.w[i]) - ref_x) + 0.5 * floor_height * (model.floor[j] - model.floor[i])
+         ],
+
+        #  i auf floor unterhalb, situation ref_x lage 2
+        [model.floor[i] <= model.floor[j] + 1,
+         model.x[i] + 0.5 * model.w[i] <= ref_x,
+         model.x[j] + + 0.5 * model.w[j] >= ref_x,
+         model.dist_x == ((model.x[j] + 0.5 * model.w[j]) - ref_x) + (
+                     ref_x - model.x[i] - 0.5 * model.w[i]) + 0.5 * floor_height * (model.floor[j] - model.floor[i])
+         ],
+
+        # i links von j auf, i auf floor unterhalb, situation ref_x lage 3
+        [model.floor[i] <= model.floor[j] + 1,
+         model.x[i] + 0.5 * model.w[i] >= ref_x,
+         model.x[j] + + 0.5 * model.w[j] <= ref_x,
+         model.dist_x == (ref_x - model.x[j] - 0.5 * model.w[j]) + (
+                     (model.x[i] + 0.5 * model.w[i]) - ref_x) + 0.5 * floor_height * (model.floor[j] - model.floor[i])
+         ],
+
+        # i links von j auf, i auf floor unterhalb, situation ref_x lage 4
+        [model.floor[i] <= model.floor[j] + 1,
+         model.x[i] + 0.5 * model.w[i] <= ref_x,
+         model.x[j] + 0.5 * model.w[j] <= ref_x,
+         model.dist_x == (ref_x - model.x[j] - 0.5 * model.w[j]) + (
+                     ref_x - model.x[i] - 0.5 * model.w[i]) + 0.5 * floor_height * (model.floor[j] - model.floor[i])
+         ],
+
+        #  i auf floor oberhalb, situation ref_x lage 1
+        [model.floor[i] >= model.floor[j] + 1,
+         model.x[i] + 0.5 * model.w[i] >= ref_x,
+         model.x[j] + 0.5 * model.w[j] >= ref_x,
+         model.dist_x == ((model.x[j] + 0.5 * model.w[j]) - ref_x) + (
+                     (model.x[i] + 0.5 * model.w[i]) - ref_x) + 0.5 * floor_height * (model.floor[j] - model.floor[i])
+         ],
+
+        #  i auf floor oberhalb, situation ref_x lage 2
+        [model.floor[i] >= model.floor[j] + 1,
+         model.x[i] + 0.5 * model.w[i] <= ref_x,
+         model.x[j] + + 0.5 * model.w[j] >= ref_x,
+         model.dist_x == ((model.x[j] + 0.5 * model.w[j]) - ref_x) + (
+                     ref_x - model.x[i] - 0.5 * model.w[i]) + 0.5 * floor_height * (model.floor[j] - model.floor[i])
+         ],
+
+        # i links von j auf, i auf floor oberhalb, situation ref_x lage 3
+        [model.floor[i] >= model.floor[j] + 1,
+         model.x[i] + 0.5 * model.w[i] <= ref_x,
+         model.x[j] + + 0.5 * model.w[j] <= ref_x,
+         model.dist_x == (ref_x - model.x[j] - 0.5 * model.w[j]) + (
+                     ref_x - model.x[i] - 0.5 * model.w[i]) + 0.5 * floor_height * (model.floor[j] - model.floor[i])
+         ],
+
+        # i links von j auf, i auf floor oberhalb, situation ref_x lage 4
+        [model.floor[i] >= model.floor[j] + 1,
+         model.x[i] + 0.5 * model.w[i] <= ref_x,
+         model.x[j] + 0.5 * model.w[j] <= ref_x,
+         model.dist_x == (ref_x - model.x[j] - 0.5 * model.w[j]) + (
+                     ref_x - model.x[i] - 0.5 * model.w[i]) + 0.5 * floor_height * (model.floor[j] - model.floor[i])
+         ],
+
+    ]
+
+
+def define_distance_constraints(building):
+    model = building.model
+    model.distance_x = gdp.Disjunction(model.room_idx, model.room_idx,
+                                       rule=disjunction_distance_x_rule, xor=False)
+    model.distance_y = gdp.Disjunction(model.room_idx, model.room_idx,
+                                       rule=disjunction_distance_y_rule, xor=False)
 
 
 def define_floor_constraints(building):
@@ -150,10 +246,10 @@ def define_Constraints_adjacency(building):
 
 def disjunction_no_intersection_rule(model, i, j):
     if i < j:
-        return [[model.y[i] + model.h[i] <= model.y[j]],  # above
-                [model.y[i] >= model.y[j] + model.h[j]],  # below
-                [model.x[i] + model.w[i] <= model.x[j]],  # left
-                [model.x[i] + model.w[i] <= model.x[j]],  # right
+        return [[model.y[i] + model.h[i] <= model.y[j]],  # i above j
+                [model.y[i] >= model.y[j] + model.h[j]],  # i below j
+                [model.x[i] + model.w[i] <= model.x[j]],  # i left j
+                [model.x[j] + model.w[j] <= model.x[i]],  # i right j
                 [model.floor[i] >= model.floor[j] + 1],
                 [model.floor[j] >= model.floor[i] + 1]
                 ]
