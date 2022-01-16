@@ -6,6 +6,7 @@ from objects.building_constraints import *
 from objects.connection import Adjacency
 from objects.model_functions import *
 import os
+import time
 
 class Building:
     def __init__(self, building_width_m=10, building_length_m=25, max_floor=1, floor_height_m=2.5):
@@ -58,27 +59,52 @@ class Building:
         define_Constraints_no_intersection(self)
         define_Constrains_in_boundary(self)
         define_Constraints_min_area(self)
-        define_Constraints_max_area(self)
+        # define_Constraints_max_area(self)
         define_Constraints_min_side_len(self)
         # define_Constraints_ratio(self)
         define_floor_constraints(self)
         define_Constraints_adjacency(self)
+        define_distance_constraints(self)
         define_Objective(self)
         # pe.TransformationFactory('gdp.hull').apply_to(self.model)  #'gdp.bigm' , '
         pe.TransformationFactory('gdp.bigm').apply_to(self.model)
 
-    def optimise_bonmin(self, tee=False):
+    def optimise_bonmin(self, tee=False,time_limit_sec=3600):
         self.define_model()
         # opt = pe.SolverFactory('gdpopt')  #' gplk
         # opt.options['ma27_pivtol'] = 1e-4
         solver = pe.SolverFactory('bonmim', executable='/home/markus/Bonmin-1.8.8/build/bin/bonmin')
+        solver.options.option_file_name = "bonmin.opt"
+        with open("bonmin.opt", "w") as f:
+            # f.write() # Here you can specify options for Couenne
+            # f.write("problem_print_level 7\n")
+            f.write("bonmin.milp_strategy find_good_sol\n")
+            f.write("bonmin.algorithm B-BB\n")
+            # f.write("bonmin.solution_limit  1\n")
+            f.write("bonmin.iteration_limit 2147483647\n")
+            # f.write("bonmin.tree_search_strategy probed-dive\n")
+            f.write("bonmin.variable_selection strong-branching\n")
+            f.write("bonmin.bonmin.milp_solver Cbc_D\n")
+            f.write("bonmin.milp_strategy  find_good_sol\n")   # find_good_sol
+            # f.write("bonmin.milp_strategy  solve_to_optimality\n")   # solve_to_optimality
+            f.write("max_iter 10000\n") # ipopt
+            f.write("bonmin.nlp_solver  Ipopt\n")
+            # f.write("bonmin.print_frequency_time  120\n")
+            # f.write("bonmin.print_info_string    yes\n")
+            # f.write("bonmin.print_user_options  yes\n")
+            f.write("bonmin.pump_for_minlp  yes\n")
+            f.write("pump_for_minlp.time_limit  60\n")
+            f.write("pump_for_minlp.solution_limit  2\n")
+            f.write("bonmin.time_limit {}\n".format(time_limit_sec))
+            f.write("ipopt.linear_solver ma86\n")
+            f.write("linear_solver ma86\n")
 
-        solver.options['linear_solver'] = 'ma86'  # option für ipopt ma86,ma97
-        solver.options['max_iter'] = 10000  # option für ipopt?
-        solver.options['bonmin.milp_strategy'] = 'find_good_sol'  # default: solve_to_optimality
-        solver.options['bonmin.algorithm'] = 'B-BB'  # default and recommended: B-BB. B-Hyb
-        solver.options['bonmin.solution_limit'] = '1'
-        solver.options['bonmin.time_limit'] = 100  # in sec
+        # solver.options['linear_solver'] = 'ma86'  # option für ipopt ma86,ma97
+        # solver.options['max_iter'] = 10000  # option für ipopt?
+        # solver.options['bonmin.milp_strategy'] = 'find_good_sol'  # default: solve_to_optimality
+        # solver.options['bonmin.algorithm'] = 'B-BB'  # default and recommended: B-BB. B-Hyb
+        # solver.options['bonmin.solution_limit'] = 2
+        # solver.options['bonmin.time_limit'] = time_limit_sec  # in sec
         # solver.options['bonmin.nlp_solver'] = 'Ipopt'  # default
         # solver.options['bonmin.iteration_limit'] = 2147483647
         self.opt_results = solver.solve(self.model, tee=tee)
@@ -97,7 +123,7 @@ class Building:
                 f.write("time_limit 1200\n")
                 f.write("bonmin.milp_strategy find_good_sol\n")
                 f.write("bonmin.algorithm B-BB\n")
-                # f.write("bonmin.solution_limit  2\n")
+                f.write("bonmin.solution_limit  2\n")
                 f.write("ipopt.linear_solver ma86\n")
 
             self.opt_results = solver.solve(self.model, tee=False)
@@ -123,11 +149,7 @@ class Building:
             self.opt_results = solver.solve(self.model, tee=tee) # ,load_solutions=True,keepfiles=True)
             return self.opt_results
 
-    # solver = pe.SolverFactory('couenne', executable='/home/markus/Couenne/build/bin/couenne')
-    # # solver.options['Couenne.display_stats'] = 'yes'
-    # solver.options['linear_solver'] = 'ma86'  # option für ipopt ma8,ma97
-    # solver.options['problem_print_level'] = 7 # max 7
-    # self.opt_result = solver.solve(self.model,tee=True)
+
 
     def optimise_mindtpy(self, tee=False):
         self.define_model()
@@ -167,5 +189,8 @@ class Building:
                     print('#{} {}: {}m2, Floor {}'.format(room.idx, room.name, room_area, floor))
             floor_imgs.append(img)
         floorplan = np.concatenate(floor_imgs, axis=0)
-        cv2.imshow('Floorplan', floorplan)
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        cv2.imwrite('Floorplan_{}.png'.format(timestr),floorplan)
+
+        cv2.imshow('Floorplan',floorplan)
         cv2.waitKey()

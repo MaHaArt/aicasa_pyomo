@@ -28,7 +28,7 @@ def do_test():
     print('min_area_target: {0:.1f}m2, max_area_target: {1:.1f}m2, area_available: {2:.1f}m2'.format(min_area_target/1e4, max_area_target/1e4, area_available/1e4))
 
     # results = building.optimise_mindtpy(tee=True)
-    # results = building.optimise_bonmin(tee=False)
+    # results = building.optimise_bonmin(tee=True)
     results = building.optimise_octeract(tee=True)
     # results = building.optimise_couenne()
     if (
