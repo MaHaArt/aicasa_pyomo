@@ -75,28 +75,33 @@ class Building:
         # opt.options['ma27_pivtol'] = 1e-4
         solver = pe.SolverFactory('bonmim', executable='/home/markus/Bonmin-1.8.8/build/bin/bonmin')
         solver.options.option_file_name = "bonmin.opt"
+
+
         with open("bonmin.opt", "w") as f:
             # f.write() # Here you can specify options for Couenne
             # f.write("problem_print_level 7\n")
+            f.write("bonmin.bonmin.milp_solver Cbc_D\n")
             f.write("bonmin.milp_strategy find_good_sol\n")
             f.write("bonmin.algorithm B-BB\n")
             # f.write("bonmin.solution_limit  1\n")
             f.write("bonmin.iteration_limit 2147483647\n")
             # f.write("bonmin.tree_search_strategy probed-dive\n")
             f.write("bonmin.variable_selection strong-branching\n")
-            f.write("bonmin.bonmin.milp_solver Cbc_D\n")
-            f.write("bonmin.milp_strategy  find_good_sol\n")   # find_good_sol
+            # f.write("bonmin.milp_strategy  find_good_sol\n")   # find_good_sol
             # f.write("bonmin.milp_strategy  solve_to_optimality\n")   # solve_to_optimality
-            f.write("max_iter 10000\n") # ipopt
+
+            # NLP
+            # f.write("max_iter 10000\n") # ipopt
             f.write("bonmin.nlp_solver  Ipopt\n")
             # f.write("bonmin.print_frequency_time  120\n")
             # f.write("bonmin.print_info_string    yes\n")
             # f.write("bonmin.print_user_options  yes\n")
-            f.write("bonmin.pump_for_minlp  yes\n")
-            f.write("pump_for_minlp.time_limit  60\n")
-            f.write("pump_for_minlp.solution_limit  2\n")
+            # f.write("bonmin.pump_for_minlp  yes\n")
+            # f.write("pump_for_minlp.time_limit  60\n")
+            # f.write("pump_for_minlp.solution_limit  2\n")
             f.write("bonmin.time_limit {}\n".format(time_limit_sec))
-            f.write("ipopt.linear_solver ma86\n")
+            # f.write("ipopt.linear_solver ma86\n")
+            f.write("bonmin.solution_limit  2\n")
             f.write("linear_solver ma86\n")
 
         # solver.options['linear_solver'] = 'ma86'  # option für ipopt ma86,ma97
@@ -110,7 +115,7 @@ class Building:
         self.opt_results = solver.solve(self.model, tee=tee)
         return self.opt_results
 
-    def optimise_couenne(self):
+    def optimise_couenne(self,tee=False,time_limit_sec=3600):
         self.define_model()
 
         with pe.SolverFactory('couenne', executable='/home/markus/Couenne/build/bin/couenne') as solver:
@@ -120,16 +125,17 @@ class Building:
                 # f.write() # Here you can specify options for Couenne
                 # f.write("problem_print_level 7\n")
                 f.write("local_optimization_heuristic yes\n")
-                f.write("time_limit 1200\n")
+                f.write("time_limit {}\n".format(time_limit_sec))
                 f.write("bonmin.milp_strategy find_good_sol\n")
                 f.write("bonmin.algorithm B-BB\n")
-                f.write("bonmin.solution_limit  2\n")
+                f.write("bonmin.solution_limit  1\n")
+                # f.write("print_level  2\n")
                 f.write("ipopt.linear_solver ma86\n")
 
-            self.opt_results = solver.solve(self.model, tee=False)
+            self.opt_results = solver.solve(self.model, tee=tee)
             return self.opt_results
 
-    def optimise_octeract(self, tee=False):
+    def optimise_octeract(self, tee=False,time_limit_sec=3600):
         self.define_model()
         os.environ["octeract_options"] = "num_cores=1"
         with pe.SolverFactory('octeract-engine',solver_io="nl",executable='/home/markus/octeract-engine-4.0.0/bin/octeract-engine') as solver:
@@ -142,7 +148,7 @@ class Building:
                 f.write(
                     "CP_MAX_ITERATIONS=5\n")  # limit for the number of iterations performed by Constraint Propagation (CP), default 5
                 f.write("FIRST_FEASIBLE_SOLUTION=false\n")
-                f.write("MAX_SOLVER_TIME=360\n")  # in secs
+                f.write("MAX_SOLVER_TIME={}\n".format(time_limit_sec))
                 f.write("BRANCHING_STRATEGY = HYBRID_INTEGER_LEAST_REDUCED_AXIS\n")  # default:  BRANCHING_STRATEGY = MOST_VIOLATED_TERM
                 # f.write("USE_MILP_RELAXATION = false\n")
 

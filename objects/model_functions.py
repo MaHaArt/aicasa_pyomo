@@ -22,10 +22,10 @@ def define_vars_for_model(building):
     model.w = pe.Var(model.room_idx, bounds=(50, building.width), within=pe.NonNegativeReals)
     model.floor_constraints = pe.ConstraintList()
     model.dist_x = pe.Var(model.room_idx, model.room_idx,
-                          bounds=(0, 2 * building.width),  # 2* weil ggf. auf unterschiedlichem Floor
+                          bounds=(0, 2 * building.width + building.max_floor * building.floor_height),
                           within=pe.NonNegativeReals)
     model.dist_y = pe.Var(model.room_idx, model.room_idx,
-                          bounds=(0, 2 * building.len),  # 2* weil ggf. auf unterschiedlichem Floor
+                          bounds=(0, 2 * building.len + building.max_floor * building.floor_height),
                           within=pe.NonNegativeReals)
     model.dist_z = pe.Var(model.room_idx, model.room_idx,
                           bounds=(0, building.max_floor * building.floor_height),
@@ -418,15 +418,28 @@ def define_Constrains_in_boundary(building):
     model.vertical_boundary = pe.Constraint(model.room_idx, rule=vertical_boundary_rule)
 
 
-def objrule(model):
+def objrule(model,alpha=10,beta=1,gamma=1):
     building = model.building
-    return sum(model.min_side_len[i] for i in model.room_idx) \
-           - 1e-3 * sum(model.dist_x[i, j] + model.dist_y[i, j] + model.dist_z[i, j]
+    expr =  alpha * sum(model.min_side_len[i] for i in model.room_idx) / (model.building.nr_of_rooms * 0.2 * max(building.width, building.len))\
+           -  beta * sum(model.dist_x[i, j] + model.dist_y[i, j] + model.dist_z[i, j]
                          for i in model.room_idx
-                         for j in range(i + 1, building.nr_of_rooms)) \
-           - 1e-3 * sum(model.x[i] + model.y[i] for i in model.room_idx)
+                         for j in range(i + 1, building.nr_of_rooms))  / (model.building.nr_of_rooms * model.building.nr_of_rooms * max(building.width,building.len) ) \
+           -  gamma * sum(model.x[i] + model.y[i] for i in model.room_idx) / (model.building.nr_of_rooms * (building.width + building.len) )
+    return expr
+
+
+def objrule2(model,alpha=2,beta=1,gamma=1):
+    building = model.building
+    area_equiv = sum(model.min_side_len[i] for i in model.room_idx) / (model.building.nr_of_rooms * 0.2 * max(building.width, building.len))
+    relative_dist = sum(model.dist_x[i, j] + model.dist_y[i, j] + model.dist_z[i, j]
+                         for i in model.room_idx
+                         for j in range(i + 1, building.nr_of_rooms))  /\
+                    (model.building.nr_of_rooms * model.building.nr_of_rooms * max(building.width,building.len) )
+    absolute_dist = sum(model.x[i] + model.y[i] for i in model.room_idx) / (model.building.nr_of_rooms * (building.width + building.len) )
+    expr =  2 * pe.tanh(area_equiv) - pe.tanh(relative_dist) -  pe.tanh(absolute_dist)
+    return expr
 
 
 def define_Objective(building):
     model = building.model
-    model.value = pe.Objective(rule=objrule, sense=pe.maximize)
+    model.value = pe.Objective(rule=objrule2, sense=pe.maximize)
