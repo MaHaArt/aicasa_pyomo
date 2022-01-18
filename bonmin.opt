@@ -1,0 +1,9 @@
+bonmin.bonmin.milp_solver Cbc_D
+bonmin.milp_strategy find_good_sol
+bonmin.algorithm B-BB
+bonmin.iteration_limit 2147483647
+bonmin.variable_selection strong-branching
+bonmin.nlp_solver  Ipopt
+bonmin.time_limit 12000
+bonmin.solution_limit  2
+linear_solver ma86

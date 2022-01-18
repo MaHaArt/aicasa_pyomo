@@ -1,0 +1,6 @@
+local_optimization_heuristic yes
+time_limit 420
+bonmin.milp_strategy find_good_sol
+bonmin.algorithm B-BB
+bonmin.solution_limit  1
+ipopt.linear_solver ma86
